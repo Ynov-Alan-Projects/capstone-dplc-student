@@ -6,6 +6,11 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
+# Pull secrets for a private registry. Leave empty for a public image; set
+# at deploy time (e.g. --set imagePullSecrets[0].name=ghcr-pull) when the
+# GHCR package is private. The referenced Secret must exist in the namespace.
+imagePullSecrets: []
+
 app:
   replicas: 2
   resources:
