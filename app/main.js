@@ -414,9 +414,25 @@ app.post('/api/data', async (req, res) => {
 const PORT = 3000;
 
 if (require.main === module) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
+
+  // Arrêt gracieux : on draine le serveur HTTP puis le pool PG.
+  const shutdown = (signal) => {
+    console.log(`${signal} reçu — arrêt gracieux en cours`);
+    server.close(() => {
+      pool.end().then(() => {
+        console.log('Pool PostgreSQL fermé — sortie propre');
+        process.exit(0);
+      }).catch(() => process.exit(0));
+    });
+    // Filet de sécurité : forcer la sortie si le drain traîne.
+    setTimeout(() => process.exit(0), 10000).unref();
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 // Export pour les tests et les autres modules
