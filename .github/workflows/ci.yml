@@ -32,6 +32,8 @@ jobs:
       sha: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
+      - name: Compute lowercase image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/worldcup-app" >> "$GITHUB_ENV"
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -42,8 +44,8 @@ jobs:
           context: ./app
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/worldcup-app:${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/worldcup-app:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
 
   deploy:
     needs: build-push
@@ -51,6 +53,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Compute lowercase image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/worldcup-app" >> "$GITHUB_ENV"
       - name: helm upgrade over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -65,7 +69,7 @@ jobs:
             helm upgrade --install worldcup charts/worldcup \
               --namespace worldcup --create-namespace \
               --set host=worldcup.${{ secrets.PUBLIC_IP }}.nip.io \
-              --set image.repository=ghcr.io/${{ github.repository_owner }}/worldcup-app \
+              --set image.repository=${{ env.IMAGE }} \
               --set image.tag=${{ github.sha }} \
               --set db.password='${{ secrets.DB_PASSWORD }}' \
               --set ingress.tls.enabled=true \
