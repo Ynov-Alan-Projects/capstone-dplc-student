@@ -7,10 +7,21 @@
 
 ## 1. Provision the cluster
 ```bash
-export PUBLIC_IP=<IP>
-export LETSENCRYPT_EMAIL=you@example.com
-sudo -E bash infra/bootstrap.sh
+# Pass the variables to sudo directly: `sudo -E` is ignored on some
+# hardened sudoers, which would silently fall back to the defaults.
+sudo PUBLIC_IP=<IP> LETSENCRYPT_EMAIL=you@example.com bash infra/bootstrap.sh
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+```
+
+## 1b. Image pull secret (private GHCR package only)
+Skip this if the GHCR package is public. For a private package, create the
+pull secret the chart references (token needs the `read:packages` scope):
+```bash
+kubectl create namespace worldcup --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n worldcup create secret docker-registry ghcr-pull \
+  --docker-server=ghcr.io \
+  --docker-username=<github-user> \
+  --docker-password=<PAT-with-read:packages>
 ```
 
 ## 2. Deploy the app
@@ -22,8 +33,10 @@ helm upgrade --install worldcup charts/worldcup \
   --set image.tag=<commit-sha> \
   --set db.password='<strong-password>' \
   --set ingress.tls.enabled=true \
+  --set imagePullSecrets[0].name=ghcr-pull \
   --wait
 ```
+> Omit the `imagePullSecrets` flag if the GHCR package is public.
 
 ## 3. Verify
 ```bash
