@@ -73,4 +73,5 @@ jobs:
               --set image.tag=${{ github.sha }} \
               --set db.password='${{ secrets.DB_PASSWORD }}' \
               --set ingress.tls.enabled=true \
+              --set imagePullSecrets[0].name=ghcr-pull \
               --wait --timeout 5m
