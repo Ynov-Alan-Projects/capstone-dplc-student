@@ -1,0 +1,50 @@
+# Global host (set to <VPS_IP>.nip.io at deploy time)
+host: worldcup.127-0-0-1.nip.io
+
+image:
+  repository: ghcr.io/REPLACE_OWNER/worldcup-app
+  tag: latest
+  pullPolicy: IfNotPresent
+
+app:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 256Mi
+  hpa:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 60
+
+db:
+  image: postgres:15
+  name: worldcup2026
+  user: postgres
+  password: postgres        # overridden by --set at deploy; stored in a Secret
+  storage: 2Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+ingress:
+  className: traefik
+  tls:
+    enabled: false          # flip to true once cert-manager ClusterIssuer is ready
+    clusterIssuer: letsencrypt-prod
+
+cronjob:
+  schedule: "*/15 * * * *"
+
+monitoring:
+  serviceMonitor:
+    enabled: true           # requires kube-prometheus-stack CRDs
+  grafanaDashboard:
+    enabled: true
