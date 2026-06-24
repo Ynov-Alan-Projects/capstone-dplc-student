@@ -1,0 +1,6 @@
+apiVersion: v2
+name: worldcup
+description: World Cup 2026 app (Node.js + PostgreSQL) for single-node k3s
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

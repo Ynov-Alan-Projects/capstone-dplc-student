@@ -120,3 +120,32 @@ La soutenance est une **revue d'ingénierie en direct** — pas de PowerPoint.
 ## Documentation
 
 Consultez le [Guide Étudiant](docs/GUIDE-ETUDIANT.md) pour les détails techniques : routes API, variables d'environnement, exemples de requêtes, et conseils.
+
+---
+
+## 🚀 Déploiement Cloud (k3s, VPS Ikoula)
+
+- **URL publique :** `https://worldcup.<IP>.nip.io`
+- **Health :** `/api/health` · **DB :** `/api/health/db` · **Métriques :** `/metrics`
+- **Grafana :** `https://grafana.<IP>.nip.io`
+- **Architecture :** voir [`docs/architecture.md`](docs/architecture.md)
+- **Reproduire :** voir [`infra/RUNBOOK.md`](infra/RUNBOOK.md) ou `infra/bootstrap.sh` + `helm upgrade`
+- **CI/CD :** push sur `main` → GitHub Actions → build GHCR → `helm upgrade` sur le VPS
+
+| Capacité | Mécanisme |
+|---|---|
+| Élasticité | HPA CPU (2→10 replicas) sur `/api/compute` |
+| Self-healing | probes + restart kubelet ; PVC persistant |
+| Observabilité | kube-prometheus-stack + dashboard Grafana |
+| FinOps | 1 VPS 40 €/mois vs ~250-300 € managé (~6×) |
+
+### Structure ajoutée
+
+```
+├── charts/worldcup/      # Chart Helm (app, postgres, hpa, ingress, cronjob, monitoring)
+├── infra/                # bootstrap.sh (k3s+monitoring), RUNBOOK.md, loadtest.sh
+├── teacher-tools/        # check-dockerfile.sh (scorer 5 bonnes pratiques)
+├── .github/workflows/    # ci.yml (test → build GHCR → deploy SSH)
+└── app/jobs/report.js    # Job créatif (classement + équipe favorite)
+```
+
